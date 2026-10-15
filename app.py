@@ -8,7 +8,7 @@ credentials = st.secrets["gcp_service_account"]
 gc = gspread.service_account_from_dict(credentials)
 
 # Otvorenie tabuľky podľa názvu
-sh = gc.open("Názov Vašej Google Tabuľky")
+sh = gc.open("app-skuska")
 import streamlit as st
 import pandas as pd
 import gspread
