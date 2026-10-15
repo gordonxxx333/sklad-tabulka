@@ -1,17 +1,25 @@
 import streamlit as st
 import gspread
+import json
 
-# Načítanie údajov zo Streamlit Secrets
-credentials = st.secrets["gcp_service_account"]
+try:
+    # 1. Načítanie textového JSON kľúča zo Streamlit Secrets
+    credentials_text = st.secrets["gspread"]["service_account"]
+    
+    # 2. Prevedenie textu na Python slovník
+    credentials_dict = json.loads(credentials_text)
+    
+    # 3. Prihlásenie do Google služieb
+    gc = gspread.service_account_from_dict(credentials_dict)
+    
+    # 4. Otvorenie tabuľky (Vložte sem URL vašej tabuľky zo sklad-tabulka)
+    sh = gc.open_by_url("https://google.com")
+    
+    st.success("Úspešne pripojené ku Google Sheets!")
 
-# Prihlásenie pomocou informácií z účtu
-gc = gspread.service_account_from_dict(credentials)
+except Exception as e:
+    st.error(f"Nepodarilo sa pripojiť ku Google Sheets. Chyba: {e}")
 
-# Otvorenie tabuľky podľa názvu
-sh = gc.open("app-skuska")
-import streamlit as st
-import pandas as pd
-import gspread
 
 # 1. Nastavenie vzhľadu aplikácie
 st.set_page_config(page_title="Sklad Doskového Materiálu", page_icon="📦", layout="wide")
