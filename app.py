@@ -1,4 +1,15 @@
 import streamlit as st
+import gspread
+
+# Načítanie údajov zo Streamlit Secrets
+credentials = st.secrets["gcp_service_account"]
+
+# Prihlásenie pomocou informácií z účtu
+gc = gspread.service_account_from_dict(credentials)
+
+# Otvorenie tabuľky podľa názvu
+sh = gc.open("Názov Vašej Google Tabuľky")
+import streamlit as st
 import pandas as pd
 import gspread
 
