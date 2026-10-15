@@ -1,25 +1,7 @@
 import streamlit as st
+import pandas as pd
 import gspread
-import json
-
-try:
-    # 1. Načítanie textového JSON kľúča zo Streamlit Secrets
-    credentials_text = st.secrets["gspread"]["service_account"]
-    
-    # 2. Prevedenie textu na Python slovník
-    credentials_dict = json.loads(credentials_text)
-    
-    # 3. Prihlásenie do Google služieb
-    gc = gspread.service_account_from_dict(credentials_dict)
-    
-    # 4. Otvorenie tabuľky (Vložte sem URL vašej tabuľky zo sklad-tabulka)
-    sh = gc.open_by_url("https://google.com")
-    
-    st.success("Úspešne pripojené ku Google Sheets!")
-
-except Exception as e:
-    st.error(f"Nepodarilo sa pripojiť ku Google Sheets. Chyba: {e}")
-
+import json  # Pridané pre spracovanie textu zo Secrets
 
 # 1. Nastavenie vzhľadu aplikácie
 st.set_page_config(page_title="Sklad Doskového Materiálu", page_icon="📦", layout="wide")
@@ -34,9 +16,14 @@ NAZOV_TABULKY = "app-skuska"
 NAZOV_PRVEHO_STLPCA = "Názov dekoru / Farba"
 PREDVOLENE_STLPCE = [NAZOV_PRVEHO_STLPCA, "18mm (ks)", "25mm (ks)", "38mm (ks)", "16mm (ks)"]
 
-# 2. Prepojenie na Google Sheets cez gspread
+# 2. Prepojenie na Google Sheets cez gspread a Streamlit Secrets
 try:
-    gc = gspread.service_account(filename="kluc.json")
+    # Bezpečné načítanie JSON kľúča zo Streamlit Secrets
+    credentials_text = st.secrets["gspread"]["service_account"]
+    credentials_dict = json.loads(credentials_text)
+    
+    # Prihlásenie pomocou slovníka namiesto súboru kluc.json
+    gc = gspread.service_account_from_dict(credentials_dict)
     sh = gc.open(NAZOV_TABULKY)
     worksheet = sh.get_worksheet(0)
     
@@ -55,11 +42,8 @@ try:
             df["16mm (ks)"] = 0
 except Exception as e:
     st.error(f"Nepodarilo sa pripojiť ku Google Sheets. Chyba: {e}")
-    df = pd.DataFrame([
-        {NAZOV_PRVEHO_STLPCA: "Biela Hladká", "18mm (ks)": 15, "25mm (ks)": 4, "38mm (ks)": 0, "16mm (ks)": 0},
-        {NAZOV_PRVEHO_STLPCA: "Dub Antik", "18mm (ks)": 8, "25mm (ks)": 12, "38mm (ks)": 2, "16mm (ks)": 5},
-        {NAZOV_PRVEHO_STLPCA: "Antracit", "18mm (ks)": 22, "25mm (ks)": 0, "38mm (ks)": 5, "16mm (ks)": 10},
-    ])
+    # Ak pripojenie zlyhá, zastavíme aplikáciu, aby nevznikali ďalšie chyby v kóde
+    st.stop()
 
 # Prevedieme stĺpec s názvami na čistý text
 df[NAZOV_PRVEHO_STLPCA] = df[NAZOV_PRVEHO_STLPCA].astype(str)
@@ -127,7 +111,7 @@ upraveny_df = st.data_editor(
 # 6. Uloženie zmien späť do Google Sheets
 if st.button("💾 Uložiť zmeny", type="primary"):
     try:
-        # KĽÚČOVÁ ZMENA: Ak sme filtrovali, zlúčime zmeny na základe názvu dekoru
+        # Ak sme filtrovali, zlúčime zmeny na základe názvu dekoru
         if hladany_text:
             # Prejdeme upravené riadky a prepíšeme ich v hlavnom df
             for _, row in upraveny_df.iterrows():
